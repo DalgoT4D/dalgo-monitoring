@@ -1,0 +1,25 @@
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 0
+
+positions:
+  filename: /home/ddp/promtail/positions.yaml
+
+clients:
+  - url: http://<public_ip>:<port>/loki/api/v1/push
+
+scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: djangologs
+          __path__: /home/ddp/.pm2/logs/*.log
+  - job_name: system1
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: airbyte
+          __path__: /home/ddp/DDP_backend/ddpui/logs/airbyte.log
