@@ -1,0 +1,9 @@
+count_over_time({filename=~"/home/ddp/\\.pm2/logs/django-celery-worker-error\\.log|/home/ddp/\\.pm2/logs/prefect-proxy-error\\.log|/home/ddp/\\.pm2/logs/pm2-logrotate-out\\.log|/home/ddp/\\.pm2/logs/django-backend-out\\.log|/home/ddp/\\.pm2/logs/prefect-proxy-out\\.log|/home/ddp/DDP_backend/ddpui/logs/airbyte\\.log|/home/ddp/\\.pm2/logs/django-celery-worker-out\\.log", job="djangologs"} 
+|~ "(\\berror\\b|failed|\\bError\\b|Exception)" 
+!~ "uvicorn.error.*WARNING.*No supported WebSocket library detected" 
+!~ "uvicorn.error - Unsupported upgrade request" 
+!~ "raise translated_error from error"
+!~ "WARNING | uvicorn.error - Invalid HTTP request received."
+!~ ".*_handle_exception\\(error\\).*"
+!~ "this error at: https://sqlalche.me/e/14/rvf5"
+| pattern `<timestamp> <log_level> <log_message>` [5m]) > 0
