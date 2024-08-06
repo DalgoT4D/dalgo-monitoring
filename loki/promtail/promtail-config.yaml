@@ -6,7 +6,7 @@ positions:
   filename: /home/ddp/promtail/positions.yaml
 
 clients:
-  - url: http://<public_ip>:<port>/loki/api/v1/push
+  - url: http://<public_ip_where_loki_is>:<port>/loki/api/v1/push
 
 scrape_configs:
   - job_name: system
