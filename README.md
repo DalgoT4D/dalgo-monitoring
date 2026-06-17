@@ -152,5 +152,5 @@ Metric history from the old Prometheus is **not** migrated — the previous setu
 | postgres_exporter  | `prometheuscommunity/postgres-exporter:v0.17.1`|
 | node_exporter      | `prom/node-exporter:v1.8.2`                    |
 | process_exporter   | `ncabatoff/process-exporter:0.8.7`             |
-| celery_exporter    | `danihodovic/celery-exporter:0.10.10`          |
+| celery_exporter    | `ghcr.io/danihodovic/celery-exporter:0.12.2`   |
 | cAdvisor           | `gcr.io/cadvisor/cadvisor:v0.49.1`             |

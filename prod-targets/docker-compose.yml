@@ -31,7 +31,7 @@ services:
       - "9256:9256"
 
   celery_exporter:
-    image: danihodovic/celery-exporter:0.10.10
+    image: ghcr.io/danihodovic/celery-exporter:0.12.2
     container_name: celery_exporter
     restart: unless-stopped
     network_mode: host
