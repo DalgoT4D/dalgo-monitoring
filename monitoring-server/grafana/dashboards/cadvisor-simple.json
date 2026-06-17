@@ -1,0 +1,121 @@
+{
+  "title": "Containers - CPU & Memory",
+  "uid": "cadvisor-simple",
+  "tags": ["cadvisor", "containers"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "container",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+        },
+        "query": {
+          "query": "label_values(container_memory_working_set_bytes{name!=\"\"}, name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "label": "Container",
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "CPU usage (cores)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~\"$container\"}[5m]))",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 3,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": ["mean", "max"]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Memory usage (working set)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (name) (container_memory_working_set_bytes{name=~\"$container\"})",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": ["mean", "max"]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ]
+}
