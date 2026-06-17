@@ -34,11 +34,10 @@ services:
     image: danihodovic/celery-exporter:0.10.10
     container_name: celery_exporter
     restart: unless-stopped
+    network_mode: host
     environment:
       CE_BROKER_URL: ${CELERY_BROKER_URL}
       CE_ACCEPT_CONTENT: json
-    ports:
-      - "9808:9808"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
