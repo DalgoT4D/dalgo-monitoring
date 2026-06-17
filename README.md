@@ -122,18 +122,12 @@ curl localhost:9808/metrics | head
 ## Migration from the old "everything-machine"
 
 1. Do the AWS-side prereqs above (target group, listener rule, DNS, SGs).
-2. Stand up the new monitoring server with empty Prometheus + fresh Grafana.
-3. On a machine that can reach the old Grafana, run the export script:
-   ```bash
-   GRAFANA_URL=https://<old-grafana> \
-   GRAFANA_TOKEN=<service-account-token> \
-   ./scripts/export-grafana.sh
-   ```
-   Review the diff, commit the dashboards + alert files.
-4. Pull on the new monitoring server and restart Grafana: `docker compose up -d grafana`.
-5. Recreate the email contact point in the new Grafana UI (Alerting → Contact points). Re-route the imported alert rules to it.
+2. Stand up the new monitoring server.
+3. On the new Grafana, add the Prometheus datasource via UI (Connections → Data sources → Add → Prometheus, URL `http://prometheus:9090`).
+4. Recreate dashboards and alerts in the new Grafana UI (either by exporting JSON from the old Grafana and importing, or building from scratch).
+5. Set up the email contact point in the new Grafana UI (Alerting → Contact points).
 6. Roll out `prod-targets/` on the prod EC2 (stop the old systemd exporters first).
-7. Confirm Prometheus targets are green: in Grafana → Connections → Data sources → Prometheus → Test, then SSM into the EC2 and `curl localhost:9090/api/v1/targets | jq` for the full list.
+7. Confirm Prometheus targets are green: SSM into the EC2 and `curl localhost:9090/api/v1/targets | jq` for the full list.
 8. Once dashboards look right, decommission the old "everything-machine" VM.
 
 Metric history from the old Prometheus is **not** migrated — the previous setup had 30d retention, so anything older than that is already gone. If you do want the history, rsync `/var/lib/prometheus/` from the old VM into the new `prometheus_data` volume before first boot.
