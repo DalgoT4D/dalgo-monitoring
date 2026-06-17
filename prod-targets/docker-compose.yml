@@ -17,7 +17,7 @@ services:
       - "9100:9100"
 
   process_exporter:
-    image: ncabatoff/process-exporter:0.8.4
+    image: ncabatoff/process-exporter:0.8.7
     container_name: process_exporter
     restart: unless-stopped
     privileged: true
