@@ -63,8 +63,6 @@ services:
       GF_DATABASE_SSL_MODE: ${GF_DATABASE_SSL_MODE:-require}
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
       - "3000:3000"
     depends_on:
