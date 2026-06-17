@@ -1,109 +1,12 @@
 apiVersion: 1
 groups:
     - orgId: 1
-      name: alert-loki
-      folder: alert-loki
-      interval: 1m
-      rules:
-        - uid: d6e95837-f05b-4c03-bb9c-2f37cc1e220a
-          title: Django & proxy alerts from pm2 logs
-          condition: C
-          data:
-            - refId: A
-              queryType: instant
-              relativeTimeRange:
-                from: 60
-                to: 0
-              datasourceUid: cbd22c84-db0e-43ab-ad98-3326ed40feb0
-              model:
-                datasource:
-                    type: loki
-                    uid: cbd22c84-db0e-43ab-ad98-3326ed40feb0
-                editorMode: code
-                expr: "count_over_time({filename=~\"/home/ddp/\\\\.pm2/logs/django-celery-worker-error\\\\.log|/home/ddp/\\\\.pm2/logs/prefect-proxy-error\\\\.log|/home/ddp/\\\\.pm2/logs/pm2-logrotate-out\\\\.log|/home/ddp/\\\\.pm2/logs/django-backend-out\\\\.log|/home/ddp/\\\\.pm2/logs/prefect-proxy-out\\\\.log|/home/ddp/\\\\.pm2/logs/django-celery-worker-out\\\\.log\", job=\"djangologs\"} \n|~ \"(\\\\berror\\\\b|failed|\\\\bError\\\\b|Exception)\" \n!~ \"uvicorn.error.*WARNING.*No supported WebSocket library detected\" \n!~ \"uvicorn.error - Unsupported upgrade request\" \n!~ \"raise translated_error from error\"\n!~ \"WARNING | uvicorn.error - Invalid HTTP request received.\"\n!~ \".*_handle_exception\\\\(error\\\\).*\"\n!~ \"this error at: https://sqlalche.me/e/14/rvf5\"\n| pattern `<timestamp> <log_level> <log_message>` [5m]) > 0"
-                hide: false
-                intervalMs: 1000
-                maxDataPoints: 43200
-                queryType: instant
-                refId: A
-            - refId: B
-              relativeTimeRange:
-                from: 60
-                to: 0
-              datasourceUid: __expr__
-              model:
-                conditions:
-                    - evaluator:
-                        params: []
-                        type: gt
-                      operator:
-                        type: and
-                      query:
-                        params:
-                            - B
-                      reducer:
-                        params: []
-                        type: last
-                      type: query
-                datasource:
-                    type: __expr__
-                    uid: __expr__
-                expression: A
-                hide: false
-                intervalMs: 1000
-                maxDataPoints: 43200
-                reducer: last
-                refId: B
-                type: reduce
-            - refId: C
-              relativeTimeRange:
-                from: 60
-                to: 0
-              datasourceUid: __expr__
-              model:
-                conditions:
-                    - evaluator:
-                        params:
-                            - 0
-                        type: gt
-                      operator:
-                        type: and
-                      query:
-                        params:
-                            - C
-                      reducer:
-                        params: []
-                        type: last
-                      type: query
-                datasource:
-                    type: __expr__
-                    uid: __expr__
-                expression: B
-                hide: false
-                intervalMs: 1000
-                maxDataPoints: 43200
-                refId: C
-                type: threshold
-          dashboardUid: cba56713-4170-4899-a81e-65f814285ea2
-          panelId: 3
-          noDataState: OK
-          execErrState: Error
-          for: 1m
-          annotations:
-            __dashboardUid__: cba56713-4170-4899-a81e-65f814285ea2
-            __panelId__: "3"
-            Logs: '{{ $labels.instance }}:{{ $labels.job }}'
-            Message: '{{ $labels.log_message }}'
-            description: Error Alert for Loki Logs
-            summary: This alert triggers when ‘error’ or ‘failed’ entries are detected in the monitored logs
-          isPaused: false
-    - orgId: 1
       name: ec2-monitoring
       folder: Dalgo-ec2-monitoring
       interval: 5m
       rules:
         - uid: e254bb25-edcf-4e96-8f62-a516d43cb6df
-          title: ddp-production-arm-ram
+          title: dalgo-production-ec2-ram
           condition: C
           data:
             - refId: memory_used
@@ -116,7 +19,7 @@ groups:
                     type: prometheus
                     uid: f65de527-42f9-4a12-9574-d16d4447b446
                 editorMode: code
-                expr: ((node_memory_MemTotal_bytes{instance="ddp-production-arm",job="node_exporter"} - node_memory_MemFree_bytes{instance="ddp-production-arm",job="node_exporter"} - (node_memory_Cached_bytes{instance="ddp-production-arm",job="node_exporter"} + node_memory_Buffers_bytes{instance="ddp-production-arm",job="node_exporter"} + node_memory_SReclaimable_bytes{instance="ddp-production-arm",job="node_exporter"}) + (node_memory_SwapTotal_bytes{instance="ddp-production-arm",job="node_exporter"} - node_memory_SwapFree_bytes{instance="ddp-production-arm",job="node_exporter"}) )/ (node_memory_MemTotal_bytes{instance="ddp-production-arm",job="node_exporter"} + node_memory_SwapTotal_bytes{instance="ddp-production-arm",job="node_exporter"})) * 100
+                expr: ((node_memory_MemTotal_bytes{instance="dalgo-production-ec2",job="node_exporter"} - node_memory_MemFree_bytes{instance="dalgo-production-ec2",job="node_exporter"} - (node_memory_Cached_bytes{instance="dalgo-production-ec2",job="node_exporter"} + node_memory_Buffers_bytes{instance="dalgo-production-ec2",job="node_exporter"} + node_memory_SReclaimable_bytes{instance="dalgo-production-ec2",job="node_exporter"}) + (node_memory_SwapTotal_bytes{instance="dalgo-production-ec2",job="node_exporter"} - node_memory_SwapFree_bytes{instance="dalgo-production-ec2",job="node_exporter"}) )/ (node_memory_MemTotal_bytes{instance="dalgo-production-ec2",job="node_exporter"} + node_memory_SwapTotal_bytes{instance="dalgo-production-ec2",job="node_exporter"})) * 100
                 hide: false
                 instant: true
                 intervalMs: 1000
@@ -193,7 +96,7 @@ groups:
             summary: Alerted when RAM usage exceeds 80 percent
           isPaused: false
         - uid: f66ebff2-562f-4c30-afb1-b645ec8727b2
-          title: ddp-production-arm-cpu
+          title: dalgo-production-ec2-cpu
           condition: C
           data:
             - refId: cpu_used
@@ -207,7 +110,7 @@ groups:
                     uid: f65de527-42f9-4a12-9574-d16d4447b446
                 editorMode: code
                 exemplar: false
-                expr: sum by(instance) (irate(node_cpu_seconds_total{instance="ddp-production-arm",job="node_exporter", mode="user"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="ddp-production-arm",job="node_exporter"}[$__rate_interval]))) * 100
+                expr: sum by(instance) (irate(node_cpu_seconds_total{instance="dalgo-production-ec2",job="node_exporter", mode="user"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="dalgo-production-ec2",job="node_exporter"}[$__rate_interval]))) * 100
                 hide: false
                 instant: true
                 intervalMs: 1000
@@ -284,7 +187,7 @@ groups:
             summary: Alerted when CPU usage exceeds 80 percent
           isPaused: false
         - uid: dd5b9fc9-3d6c-402c-a7c9-64ad0f36a2a1
-          title: ddp-production-arm-disk-space
+          title: dalgo-production-ec2-disk-space
           condition: C
           data:
             - refId: disk_used
@@ -297,7 +200,7 @@ groups:
                     type: prometheus
                     uid: f65de527-42f9-4a12-9574-d16d4447b446
                 editorMode: code
-                expr: 100 - ((node_filesystem_avail_bytes{instance="ddp-production-arm",job="node_exporter",mountpoint="/",fstype!="rootfs"} * 100) / node_filesystem_size_bytes{instance="ddp-production-arm",job="node_exporter",mountpoint="/",fstype!="rootfs"})
+                expr: 100 - ((node_filesystem_avail_bytes{instance="dalgo-production-ec2",job="node_exporter",mountpoint="/",fstype!="rootfs"} * 100) / node_filesystem_size_bytes{instance="dalgo-production-ec2",job="node_exporter",mountpoint="/",fstype!="rootfs"})
                 hide: false
                 instant: true
                 intervalMs: 1000
