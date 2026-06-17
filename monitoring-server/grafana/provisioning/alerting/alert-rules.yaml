@@ -276,3 +276,9 @@ groups:
             description: The Disk space at this moment was {{ index $values "B" }}
             summary: Alerted when Disk space exceeds 80 percent
           isPaused: false
+
+deleteRules:
+  # Loki alert removed during migration. Grafana doesn't auto-delete
+  # provisioned alerts when removed from YAML; this block forces it.
+  - orgId: 1
+    uid: d6e95837-f05b-4c03-bb9c-2f37cc1e220a
