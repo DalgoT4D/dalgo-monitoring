@@ -278,6 +278,14 @@ groups:
           isPaused: false
 
 deleteRules:
+  - orgId: 1
+    uid: e254bb25-edcf-4e96-8f62-a516d43cb6df  # ram
+  - orgId: 1
+    uid: f66ebff2-562f-4c30-afb1-b645ec8727b2  # cpu
+  - orgId: 1
+    uid: dd5b9fc9-3d6c-402c-a7c9-64ad0f36a2a1  # disk
+
+deleteRules:
   # Loki alert removed during migration. Grafana doesn't auto-delete
   # provisioned alerts when removed from YAML; this block forces it.
   - orgId: 1
