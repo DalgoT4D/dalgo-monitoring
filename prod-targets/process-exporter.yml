@@ -1,4 +1,70 @@
 process_names:
-  - name: "{{.Comm}}"
+  # Django Backend (Uvicorn ASGI Server)
+  - name: "dalgo_django_backend"
     cmdline:
-      - '.+'
+      - "uvicorn ddpui\\.asgi:application"
+
+  # Prefect Proxy (Gunicorn + Uvicorn Workers)
+  - name: "dalgo_prefect_proxy"
+    cmdline:
+      - "gunicorn proxy\\.main:app.*--workers 4.*UvicornWorker.*--bind 0\\.0\\.0\\.0:8080"
+
+  # AI LLM Service (Docker FastAPI)
+  - name: "dalgo_ai_llm_service"
+    cmdline:
+      - "uvicorn main:app.*--port 7001"
+
+  # Celery Workers - Canvas DBT Queue
+  - name: "dalgo_celery_canvas_dbt"
+    cmdline:
+      - "celery -A ddpui worker.*-Q canvas_dbt"
+
+  # Celery Workers - Default Queue
+  - name: "dalgo_celery_default"
+    cmdline:
+      - "celery -A ddpui worker.*-Q default"
+
+  # Celery Workers - Alerts Queue
+  - name: "dalgo_celery_alerts"
+    cmdline:
+      - "celery -A ddpui worker.*-Q alerts"
+
+  # Celery Beat Scheduler
+  - name: "dalgo_celery_beat"
+    cmdline:
+      - "celery -A ddpui beat"
+
+  # Prefect Server
+  - name: "dalgo_prefect_server"
+    cmdline:
+      - "prefect server start"
+
+  # Prefect Worker - DDP Queue
+  - name: "dalgo_prefect_worker_ddp"
+    cmdline:
+      - "prefect worker start --work-queue ddp"
+
+  # Prefect Worker - Manual DBT Queue
+  - name: "dalgo_prefect_worker_manual_dbt"
+    cmdline:
+      - "prefect worker start --work-queue manual-dbt"
+
+  # Prefect Worker - Daily Backup Pool
+  - name: "dalgo_prefect_worker_backup"
+    cmdline:
+      - "prefect worker start --pool dailybackup"
+
+  # Prefect Worker - EDR Queue
+  - name: "dalgo_prefect_worker_edr"
+    cmdline:
+      - "prefect worker start --work-queue edr"
+
+  # Frontend - Webapp (Next.js)
+  - name: "dalgo_webapp"
+    cmdline:
+      - "bash -c npm start"
+
+  # DBT Processes - All Versions and Commands
+  - name: "dalgo_dbt_processes"
+    cmdline:
+      - "/home/ddp/dbt/venv[^/]*/bin/dbt"

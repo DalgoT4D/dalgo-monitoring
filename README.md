@@ -153,3 +153,4 @@ Metric history from the old Prometheus is **not** migrated — the previous setu
 | node_exporter      | `prom/node-exporter:v1.8.2`                    |
 | process_exporter   | `ncabatoff/process-exporter:0.8.4`             |
 | celery_exporter    | `danihodovic/celery-exporter:0.10.10`          |
+| cAdvisor           | `gcr.io/cadvisor/cadvisor:v0.49.1`             |

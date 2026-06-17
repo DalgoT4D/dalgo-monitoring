@@ -12,19 +12,25 @@ scrape_configs:
     static_configs:
       - targets: ['prod-ec2:9100']
         labels:
-          instance: 'ddp-production-arm'
+          instance: 'dalgo-production-ec2'
 
   - job_name: 'process_exporter'
     static_configs:
       - targets: ['prod-ec2:9256']
         labels:
-          instance: 'ddp-production-arm'
+          instance: 'dalgo-production-ec2'
 
   - job_name: 'celery_exporter'
     static_configs:
       - targets: ['prod-ec2:9808']
         labels:
-          instance: 'ddp-production-arm'
+          instance: 'dalgo-production-ec2'
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['prod-ec2:9280']
+        labels:
+          instance: 'dalgo-production-ec2'
 
   - job_name: 'postgres_exporter'
     static_configs:
