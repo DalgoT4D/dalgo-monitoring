@@ -1,71 +1,155 @@
-## Dalgo monitoring
+# Dalgo monitoring
 
-We have a separate monitoring instance (in `everything` machine) that talks to various sources and collects metrics. There are two primary data stores involved in this monitoring setup
+Dockerized monitoring stack for Dalgo. Two independent deployables:
 
-### Prometheus
+| Directory             | Runs on                  | What it does                                                                 |
+|-----------------------|--------------------------|------------------------------------------------------------------------------|
+| `monitoring-server/`  | new monitoring EC2       | Prometheus + Grafana + postgres_exporter (scrapes prod RDS remotely)         |
+| `prod-targets/`       | the prod Dalgo EC2       | node_exporter + process_exporter + celery_exporter                            |
 
-Prometheus is an open-source monitoring and alerting toolkit designed to monitor and gather data from various sources within your infrastructure, providing insights into the health and performance of your systems. Prometheus collects time-series data by periodically polling configured targets using HTTP or other protocols.
+Each directory has its own `docker-compose.yml` and `.env.example`. Clone the repo on each host, copy `.env.example` → `.env`, fill it in, and `docker compose up -d`.
 
-In Dalgo's setup, we are monitoring the following data sources
-- Dalgo's production ec2 machine (hardware & OS metrics)
-- Dalgo's airbyte postgres RDS (postgres sever metrics)
-- Django app metrics that are readily available via `django-prometheus` package. 
+What we monitor:
+- Prod EC2 — hardware/OS metrics (node_exporter), per-process metrics (process_exporter), Celery tasks (celery_exporter)
+- Prod RDS — postgres server metrics (postgres_exporter, run from the monitoring server)
+- Dalgo Django app — `/prometheus/metrics` on `api.dalgo.org` (django-prometheus)
 
-Prometheus's database is a local timeseries database, situated at `/var/lib/prometheus`. 
+Public-facing TLS + reverse proxy is handled by the existing **`tech4dev-internal` ALB** in `vpc-060665f96234a5997`, not by a container in this stack. Grafana itself speaks plain HTTP on port 3000; the ALB terminates TLS at `https://monitoring.projecttech4dev.org/`.
 
-To visaulize and gather data from various sources we use `Grafana`
+---
 
-### Loki
+## Monitoring server setup
 
-Loki is an open-source, horizontally-scalable log aggregation system designed to efficiently store and query massive amounts of log data. Unlike traditional log aggregation tools, Loki doesn't store logs as individual documents but rather in chunks, which significantly reduces storage costs and improves query performance.
+### AWS-side prereqs (one-time)
 
-## Data sources
+Everything below assumes the new monitoring EC2 lives in **`vpc-060665f96234a5997`** (same VPC as the ALB and the prod EC2). Private subnet works; you'll need a NAT gateway for the EC2's outbound (docker pull, Google OAuth, SMTP, scraping `api.dalgo.org`).
 
-### Ec2 instance metrics
+1. **Target group** — HTTP, port 3000, healthcheck path `/api/health`, VPC `vpc-060665f96234a5997`. Register the new monitoring EC2 (target type: instance).
+2. **Listener rule** on `tech4dev-internal:443` — host header `monitoring.projecttech4dev.org` → forward to that target group. Priority lower than the existing vaultwarden rule is fine (any free integer).
+3. **DNS** — `monitoring.projecttech4dev.org` → CNAME (or Route53 ALIAS) → `tech4dev-internal-567714633.ap-south-1.elb.amazonaws.com`. No cert work needed — the ALB's wildcard `*.projecttech4dev.org` cert covers it.
+4. **Security groups** — create one for the monitoring EC2 (e.g. `dalgo-monitoring-sg`) and wire it up:
 
-[Node exporter](https://github.com/prometheus/node_exporter) is the prometheus exporter for hardware & OS metrics.
+   | On this resource                | Direction | Port              | Source/Dest                | Why                                  |
+   |---------------------------------|-----------|-------------------|----------------------------|--------------------------------------|
+   | monitoring EC2                  | inbound   | 3000              | ALB SG `sg-048da56c0332d295a` | ALB → Grafana                      |
+   | monitoring EC2                  | outbound  | all               | 0.0.0.0/0 (default)        | docker pull, OAuth, SMTP, scrapes    |
+   | prod EC2 (`dalgo-production-arm`) | inbound | 9100, 9256, 9808 | `dalgo-monitoring-sg`      | Prometheus scrapes node/process/celery |
+   | prod RDS                        | inbound   | 5432              | `dalgo-monitoring-sg`      | postgres_exporter connects           |
+   | metadata RDS                    | inbound   | 5432              | `dalgo-monitoring-sg`      | Grafana stores users/dashboards      |
 
-The node exporter is installed in the host machine that needs to be monitored. As the name suggests, it will compute & export OS level metrics. 
+5. **IAM** — attach the managed policy `AmazonSSMManagedInstanceCore` to the EC2's role so you can shell in via SSM Session Manager (no bastion or public SSH needed).
 
-Metrics can be scraped from this by adding this data source as a target in `prometheus.yml`.
+### Bring up the stack
 
+Prereqs on the EC2: Docker + Docker Compose plugin installed.
 
-### Postgres server metrics
+```bash
+git clone <this-repo>
+cd dalgo-monitoring/monitoring-server
+cp .env.example .env
+# edit .env — see the variable notes inside
+docker compose up -d
+docker compose logs -f grafana
+```
 
-[Postgres exporter](https://github.com/prometheus-community/postgres_exporter) is the prometheus exporter for postgres server metrics
+Once the ALB's target shows healthy, Grafana is reachable at `https://monitoring.projecttech4dev.org/`. First login uses the admin credentials from `.env`; after that, log in via Google.
 
-The postgres exporter is run as a service on the monitoring machine and configured/connected to the remote RDS that needs to be monitored. 
+### Google OAuth (Grafana)
 
-The configuration is in the `.env` file present at `/etc/postgres_exporter/postgres_exporter.env`
+1. In Google Cloud Console → APIs & Services → Credentials → **Create OAuth client ID** (type: Web application).
+2. Authorized redirect URI: `https://monitoring.projecttech4dev.org/login/google`
+3. Copy the client ID and secret into `.env` as `GF_AUTH_GOOGLE_CLIENT_ID` / `GF_AUTH_GOOGLE_CLIENT_SECRET`.
+4. Restart Grafana: `docker compose up -d grafana`.
 
-The best practice here is to create a monitoring rds user and give the minimal permissions to monitor. 
+Only `@projecttech4dev.org` accounts can sign in (enforced by `GF_AUTH_GOOGLE_ALLOWED_DOMAINS` + `GF_AUTH_GOOGLE_HOSTED_DOMAIN`). New users land as **Viewer** (read-only); promote to Editor/Admin manually in the UI.
 
-Metrics can be scraped by adding this as a target in `prometheus.yml`
+### Postgres exporter — RDS read-only user
 
-### Django app monitoring metrics
+Create a minimal-permission user on the prod RDS and put its DSN in `DATA_SOURCE_NAME`:
 
-[django-prometheus](https://pypi.org/project/django-prometheus/1.0.11/) package computes the metrics and exposes an http endpoint for prometheus to scrape from. All the setup instructions are [here](https://pypi.org/project/django-prometheus/). Works very easily and outside the box. 
+```sql
+CREATE USER monitor WITH PASSWORD '...';
+GRANT pg_monitor TO monitor;
+```
 
-This again is installed on the host machine where the Dalgo django app is running.
+### Grafana metadata DB
 
+Grafana uses an existing external Postgres (not SQLite) for its metadata. On that RDS, create the database and user once:
 
-### Logs via promtail
+```sql
+CREATE DATABASE grafana;
+CREATE USER grafana WITH PASSWORD '...';
+GRANT ALL PRIVILEGES ON DATABASE grafana TO grafana;
+\c grafana
+GRANT ALL ON SCHEMA public TO grafana;
+```
 
-[Promtail](https://grafana.com/docs/loki/latest/send-data/promtail/) is the agent responsible for packaging and sending local logs to Grafana's Loki instance. 
+Then fill the `GF_DATABASE_*` variables in `.env`. Grafana auto-creates its schema on first boot.
 
-Promtail is supposed to be installed in the host machine where the logs are situated assuming we want to route logs in file system to Loki. 
+### Dashboards and alerts (provisioning)
 
-The Loki instance will be present in the monitoring server. Http protocols are used to push logs from remote host (Dalgo prod) machine to Loki instance on the monitoring server. 
+- Dashboard JSONs live in `monitoring-server/grafana/dashboards/` and are auto-loaded by Grafana via `provisioning/dashboards/dashboards.yml`.
+- Alert rules live in `monitoring-server/grafana/provisioning/alerting/alert-rules.yaml`.
+- Contact points (email destinations) are managed via the Grafana UI — not provisioned via file.
+- `allowUiUpdates: true` is set, so dashboard edits in the UI persist to the metadata DB — but they will be **overwritten** by the JSON file on reload. Treat the files as the source of truth; commit changes.
 
+To pull existing dashboards + alerts from the **old** Grafana into the repo, see `scripts/export-grafana.sh`.
 
-## Visualizing with grafana
+---
 
-[Grafana](https://github.com/grafana/grafana) is the open-source platform for monitoring and observability. You can create dynamic dashboards in grafana with `prometheus` and `loki` as your data sources. You can also explore logs and setup alerting
+## Prod targets setup
 
-In the current, Dalgo monitoring setup - grafana uses a local sqlite db. 
+Prereqs on the prod EC2:
+- Docker + Docker Compose plugin installed
+- Stop the old systemd `node_exporter` service before starting the container (port 9100 conflict): `sudo systemctl disable --now node_exporter`
+- Same for `process_exporter` if it's running under systemd
+- SG inbound: 9100, 9256, 9808 **only** from `dalgo-monitoring-sg` (the new monitoring EC2's SG)
 
-We have 4 alerts setup in grafana
-1. Based on the logs processed by loki.
-2. Based on the RAM (node metrics) increasing a threshold.
-3. Based on the disk space (node metrics) running low. 
-4. Based on the no of connections to RDS (postgres server metrics).
+```bash
+git clone <this-repo>
+cd dalgo-monitoring/prod-targets
+cp .env.example .env
+# set CELERY_BROKER_URL to whatever the Django app uses
+docker compose up -d
+```
+
+Verify locally on the prod EC2:
+```bash
+curl localhost:9100/metrics | head
+curl localhost:9256/metrics | head
+curl localhost:9808/metrics | head
+```
+
+---
+
+## Migration from the old "everything-machine"
+
+1. Do the AWS-side prereqs above (target group, listener rule, DNS, SGs).
+2. Stand up the new monitoring server with empty Prometheus + fresh Grafana.
+3. On a machine that can reach the old Grafana, run the export script:
+   ```bash
+   GRAFANA_URL=https://<old-grafana> \
+   GRAFANA_TOKEN=<service-account-token> \
+   ./scripts/export-grafana.sh
+   ```
+   Review the diff, commit the dashboards + alert files.
+4. Pull on the new monitoring server and restart Grafana: `docker compose up -d grafana`.
+5. Recreate the email contact point in the new Grafana UI (Alerting → Contact points). Re-route the imported alert rules to it.
+6. Roll out `prod-targets/` on the prod EC2 (stop the old systemd exporters first).
+7. Confirm Prometheus targets are green: in Grafana → Connections → Data sources → Prometheus → Test, then SSM into the EC2 and `curl localhost:9090/api/v1/targets | jq` for the full list.
+8. Once dashboards look right, decommission the old "everything-machine" VM.
+
+Metric history from the old Prometheus is **not** migrated — the previous setup had 30d retention, so anything older than that is already gone. If you do want the history, rsync `/var/lib/prometheus/` from the old VM into the new `prometheus_data` volume before first boot.
+
+---
+
+## Pinned versions
+
+| Component          | Image                                          |
+|--------------------|------------------------------------------------|
+| Prometheus         | `prom/prometheus:v3.1.0`                       |
+| Grafana            | `grafana/grafana:11.4.0`                       |
+| postgres_exporter  | `prometheuscommunity/postgres-exporter:v0.17.1`|
+| node_exporter      | `prom/node-exporter:v1.8.2`                    |
+| process_exporter   | `ncabatoff/process-exporter:0.8.4`             |
+| celery_exporter    | `danihodovic/celery-exporter:0.10.10`          |

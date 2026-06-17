@@ -1,0 +1,41 @@
+name: dalgo-prod-targets
+
+services:
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node_exporter
+    restart: unless-stopped
+    pid: host
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - '/:/host:ro,rslave'
+    ports:
+      - "9100:9100"
+
+  process_exporter:
+    image: ncabatoff/process-exporter:0.8.4
+    container_name: process_exporter
+    restart: unless-stopped
+    privileged: true
+    command:
+      - '--procfs=/host/proc'
+      - '--config.path=/config/process-exporter.yml'
+    volumes:
+      - '/proc:/host/proc:ro'
+      - ./process-exporter.yml:/config/process-exporter.yml:ro
+    ports:
+      - "9256:9256"
+
+  celery_exporter:
+    image: danihodovic/celery-exporter:0.10.10
+    container_name: celery_exporter
+    restart: unless-stopped
+    environment:
+      CE_BROKER_URL: ${CELERY_BROKER_URL}
+      CE_ACCEPT_CONTENT: json
+    ports:
+      - "9808:9808"
