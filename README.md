@@ -86,14 +86,11 @@ GRANT ALL ON SCHEMA public TO grafana;
 
 Then fill the `GF_DATABASE_*` variables in `.env`. Grafana auto-creates its schema on first boot.
 
-### Dashboards and alerts (provisioning)
+### Dashboards, alerts, datasources — managed in UI
 
-- Dashboard JSONs live in `monitoring-server/grafana/dashboards/` and are auto-loaded by Grafana via `provisioning/dashboards/dashboards.yml`.
-- Alert rules live in `monitoring-server/grafana/provisioning/alerting/alert-rules.yaml`.
-- Contact points (email destinations) are managed via the Grafana UI — not provisioned via file.
-- `allowUiUpdates: true` is set, so dashboard edits in the UI persist to the metadata DB — but they will be **overwritten** by the JSON file on reload. Treat the files as the source of truth; commit changes.
+Nothing is file-provisioned. All Grafana state (dashboards, alerts, datasources, contact points, notification policies, users) lives in the metadata RDS. The repo holds only the stack definition.
 
-To pull existing dashboards + alerts from the **old** Grafana into the repo, see `scripts/export-grafana.sh`.
+**This means the metadata RDS is the single source of truth.** Make sure RDS automated backups are enabled — losing the RDS means losing every dashboard and alert. AWS Console → RDS → modify the metadata DB → enable automated backups (7-day retention minimum).
 
 ---
 
