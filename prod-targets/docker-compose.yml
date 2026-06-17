@@ -45,8 +45,13 @@ services:
     restart: unless-stopped
     privileged: true
     command:
-      - '--housekeeping_interval=15s'
+      - '--housekeeping_interval=30s'
+      - '--global_housekeeping_interval=1m'
       - '--docker_only=true'
+      - '--store_container_labels=false'
+      - '--event_storage_event_limit=default=0'
+      - '--event_storage_age_limit=default=0'
+      - '--disable_metrics=accelerator,advtcp,cpu_topology,cpuset,disk,hugetlb,memory_numa,percpu,process,referenced_memory,resctrl,sched,tcp,udp'
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -57,3 +62,5 @@ services:
       - /dev/kmsg
     ports:
       - "9280:8080"
+    mem_limit: 512m
+    memswap_limit: 512m
