@@ -44,3 +44,103 @@ scrape_configs:
     metrics_path: '/prometheus/metrics'
     static_configs:
       - targets: ['api.dalgo.org']
+
+  # Uptime probes via blackbox_exporter.
+  # To add a URL: copy a `- targets: [...] / labels: ...` block.
+  - job_name: 'blackbox_http'
+    scrape_interval: 1m
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets: [https://insights.dalgo.org]
+        labels:
+          instance: dalgo-production
+          env: production
+          subset: dalgo
+      - targets: [https://api.dalgo.org/healthcheck]
+        labels:
+          instance: dalgo-api
+          env: production
+          subset: dalgo
+      - targets: [https://staging-app.dalgo.org]
+        labels:
+          instance: dalgo-staging
+          env: staging
+          subset: dalgo
+      # Superset instances (per-client)
+      - targets: [https://akrsp.dalgo.org/]
+        labels:
+          instance: akrsp
+          env: production
+          subset: superset
+      - targets: [https://atecf.dalgo.org/]
+        labels:
+          instance: atecf
+          env: production
+          subset: superset
+      - targets: [https://bhumi.dalgo.org/]
+        labels:
+          instance: bhumi
+          env: production
+          subset: superset
+      - targets: [https://goonj.dalgo.org/]
+        labels:
+          instance: goonj
+          env: production
+          subset: superset
+      - targets: [https://inrem.dalgo.org/]
+        labels:
+          instance: inrem
+          env: production
+          subset: superset
+      - targets: [https://janaagraha.dalgo.org/]
+        labels:
+          instance: janaagraha
+          env: production
+          subset: superset
+      - targets: [https://mad.dalgo.org/]
+        labels:
+          instance: mad
+          env: production
+          subset: superset
+      - targets: [https://noora.dalgo.org/]
+        labels:
+          instance: noora
+          env: production
+          subset: superset
+      - targets: [https://shofco.dalgo.org/health]
+        labels:
+          instance: shofco
+          env: production
+          subset: superset
+      - targets: [https://sneha.dalgo.org/]
+        labels:
+          instance: sneha
+          env: production
+          subset: superset
+      - targets: [https://stir.dalgo.org/]
+        labels:
+          instance: stir
+          env: production
+          subset: superset
+      - targets: [https://superset.dalgo.org/]
+        labels:
+          instance: superset
+          env: production
+          subset: superset
+      - targets: [https://moonshine.projecttech4dev.org/]
+        labels:
+          instance: moonshine
+          env: production
+          subset: superset
+      - targets: [https://ummeed.dalgo.org/]
+        labels:
+          instance: ummeed
+          env: production
+          subset: superset
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: __address__
+        replacement: blackbox_exporter:9115

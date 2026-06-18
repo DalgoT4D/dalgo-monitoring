@@ -28,6 +28,13 @@ services:
     expose:
       - "9187"
 
+  blackbox_exporter:
+    image: prom/blackbox-exporter:v0.28.0
+    container_name: blackbox_exporter
+    restart: unless-stopped
+    expose:
+      - "9115"
+
   grafana:
     image: grafana/grafana:11.4.0
     container_name: grafana
