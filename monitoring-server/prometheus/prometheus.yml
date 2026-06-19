@@ -48,7 +48,8 @@ scrape_configs:
   # Uptime probes via blackbox_exporter.
   # To add a URL: copy a `- targets: [...] / labels: ...` block.
   - job_name: 'blackbox_http'
-    scrape_interval: 1m
+    scrape_interval: 30s
+    scrape_timeout: 10s
     metrics_path: /probe
     params:
       module: [http_2xx]
@@ -68,6 +69,11 @@ scrape_configs:
           instance: dalgo-staging
           env: staging
           subset: dalgo
+      - targets: [https://vaultwarden.projecttech4dev.org/alive]
+        labels:
+          instance: vaultwarden
+          env: production
+          subset: tech4dev
       # Superset instances (per-client)
       - targets: [https://akrsp.dalgo.org/]
         labels:
