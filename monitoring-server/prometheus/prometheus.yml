@@ -145,6 +145,11 @@ scrape_configs:
           instance: ummeed
           env: production
           subset: superset
+      - targets: [https://demosuperset.dalgo.org/health]
+        labels:
+          instance: demosuperset
+          env: staging
+          subset: superset
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
