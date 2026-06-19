@@ -48,7 +48,7 @@ scrape_configs:
   # Uptime probes via blackbox_exporter.
   # To add a URL: copy a `- targets: [...] / labels: ...` block.
   - job_name: 'blackbox_http'
-    scrape_interval: 30s
+    scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: /probe
     params:
