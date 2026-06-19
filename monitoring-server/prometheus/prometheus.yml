@@ -74,43 +74,43 @@ scrape_configs:
           instance: vaultwarden
           env: production
           subset: tech4dev
-      # Superset instances (per-client)
-      - targets: [https://akrsp.dalgo.org/]
+      # Superset instances (per-client) — probing /health (lightweight, returns 200 directly)
+      - targets: [https://akrsp.dalgo.org/health]
         labels:
           instance: akrsp
           env: production
           subset: superset
-      - targets: [https://atecf.dalgo.org/]
+      - targets: [https://atecf.dalgo.org/health]
         labels:
           instance: atecf
           env: production
           subset: superset
-      - targets: [https://bhumi.dalgo.org/]
+      - targets: [https://bhumi.dalgo.org/health]
         labels:
           instance: bhumi
           env: production
           subset: superset
-      - targets: [https://goonj.dalgo.org/]
+      - targets: [https://goonj.dalgo.org/health]
         labels:
           instance: goonj
           env: production
           subset: superset
-      - targets: [https://inrem.dalgo.org/]
+      - targets: [https://inrem.dalgo.org/health]
         labels:
           instance: inrem
           env: production
           subset: superset
-      - targets: [https://janaagraha.dalgo.org/]
+      - targets: [https://janaagraha.dalgo.org/health]
         labels:
           instance: janaagraha
           env: production
           subset: superset
-      - targets: [https://mad.dalgo.org/]
+      - targets: [https://mad.dalgo.org/health]
         labels:
           instance: mad
           env: production
           subset: superset
-      - targets: [https://noora.dalgo.org/]
+      - targets: [https://noora.dalgo.org/health]
         labels:
           instance: noora
           env: production
@@ -120,27 +120,27 @@ scrape_configs:
           instance: shofco
           env: production
           subset: superset
-      - targets: [https://sneha.dalgo.org/]
+      - targets: [https://sneha.dalgo.org/health]
         labels:
           instance: sneha
           env: production
           subset: superset
-      - targets: [https://stir.dalgo.org/]
+      - targets: [https://stir.dalgo.org/health]
         labels:
           instance: stir
           env: production
           subset: superset
-      - targets: [https://superset.dalgo.org/]
+      - targets: [https://superset.dalgo.org/health]
         labels:
           instance: dalgo-internal
           env: production
           subset: superset
-      - targets: [https://moonshine.projecttech4dev.org/]
+      - targets: [https://moonshine.projecttech4dev.org/health]
         labels:
           instance: moonshine
           env: production
           subset: superset
-      - targets: [https://ummeed.dalgo.org/]
+      - targets: [https://ummeed.dalgo.org/health]
         labels:
           instance: ummeed
           env: production
