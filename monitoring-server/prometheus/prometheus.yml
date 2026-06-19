@@ -49,7 +49,7 @@ scrape_configs:
   # To add a URL: copy a `- targets: [...] / labels: ...` block.
   - job_name: 'blackbox_http'
     scrape_interval: 30s
-    scrape_timeout: 10s
+    scrape_timeout: 15s
     metrics_path: /probe
     params:
       module: [http_2xx]
