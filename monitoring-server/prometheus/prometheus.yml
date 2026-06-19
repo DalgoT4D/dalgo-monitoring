@@ -132,7 +132,7 @@ scrape_configs:
           subset: superset
       - targets: [https://superset.dalgo.org/]
         labels:
-          instance: superset
+          instance: dalgo-internal
           env: production
           subset: superset
       - targets: [https://moonshine.projecttech4dev.org/]
