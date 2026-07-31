@@ -34,6 +34,9 @@ services:
     restart: unless-stopped
     expose:
       - "9115"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   grafana:
     image: grafana/grafana:11.4.0
