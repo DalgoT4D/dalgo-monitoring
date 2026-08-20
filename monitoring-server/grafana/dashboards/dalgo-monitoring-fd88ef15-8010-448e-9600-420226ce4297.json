@@ -1001,6 +1001,142 @@
       ],
       "title": "% of time when RAM was above 80%",
       "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+          },
+          "editorMode": "code",
+          "expr": "node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/\",fstype!=\"rootfs\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Root total",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+          },
+          "editorMode": "code",
+          "expr": "node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/\",fstype!=\"rootfs\"} - node_filesystem_avail_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/\",fstype!=\"rootfs\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Root used",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+          },
+          "editorMode": "code",
+          "expr": "node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/mnt/appdata\",fstype!=\"rootfs\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Appdata total",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f65de527-42f9-4a12-9574-d16d4447b446"
+          },
+          "editorMode": "code",
+          "expr": "node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/mnt/appdata\",fstype!=\"rootfs\"} - node_filesystem_avail_bytes{instance=\"$node\",job=\"$job\",mountpoint=\"/mnt/appdata\",fstype!=\"rootfs\"}",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Appdata used",
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Disk space over time",
+      "type": "timeseries"
     }
   ],
   "refresh": "",
